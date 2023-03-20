@@ -1,0 +1,12 @@
+{
+  "name": "comp.ce.450-2022-2023-1-internet-of-things",
+  "version": "1.0.0",
+  "description": "IoT Prototype project for course COMP.CE.450-2022-2023-1 Internet of Things",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Allan Li",
+  "license": "MIT"
+}
