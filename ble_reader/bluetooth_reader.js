@@ -1,9 +1,9 @@
 const noble = require('@abandonware/noble')
 
-proximityServiceUID = "7c8d0422-c197-11ed-afa1-0242ac120002";
-proximityCharacteristicUID = "f4e832ac-c197-11ed-afa1-0242ac120002";
-weatherServiceUID = "12dfaa88-c198-11ed-afa1-0242ac120002";
-temperatureCharacteristicUID = "26dd8136-c198-11ed-afa1-0242ac120002";
+proximityServiceUID = "7c8d0422c19711edafa10242ac120002";
+proximityCharacteristicUID = "f4e832acc19711edafa10242ac120002";
+weatherServiceUID = "12dfaa88c19811edafa10242ac120002";
+temperatureCharacteristicUID = "26dd8136c19811edafa10242ac120002";
 
 noble.on("stateChange", (state) => {
   if (state === "poweredOn") {
@@ -103,39 +103,4 @@ process.on("SIGTERM", function () {
 });
 
 
-/** 
-  subscribe() {
-    noble.on('discover', async peripheral => {
-      await noble.stopScanningAsync();
-      await peripheral.connectAsync();
-      let serviceUIDs = [this.proximityServiceUID, this.weatherServiceUID];
-      let characteristicUIDs = [thos.ProximityCharacteristicUID, this.temperatureCharacteristicUID];
-      let {characteristics} = await peripheral.discoverSomeServicesAndCharacteristicsAsync(serviceUIDs, characteristicUIDs);
-
-      let proximityValue = (await characteristics[0].readAsync())[0];
-      let temperatureValue = (await characteristics[1].readAsync())[0];
-
-      console.log(`Proximity value is: ${proximityValue}`);
-      console.log(`Temperature value is: ${temperatureValue}`);
-    })
-
-    await this.startScan()
-  }
-
-  // Function that starts the scan for the device. Uses the UID of the proximity service to find the correct device
-  startScan() {
-    const serviceUID = this.proximityServiceUID
-    return new Promise(async res => {
-      if (noble.state === 'poweredOn') {
-        await noble.startScanningAsync(serviceUID, true)
-        res()
-      } else {
-        noble.once('stateChange', async () => {
-          await noble.startScanningAsync(serviceUID, true)
-          res()
-        })
-      }
-    })
-  }
-*/
 
