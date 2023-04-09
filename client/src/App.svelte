@@ -1,47 +1,85 @@
 <script>
   import { onMount } from 'svelte';
-  import { createBluetooth } from 'node-ble';
+  import { Chart } from 'chart.js/auto';
 
-  const { bluetooth, destroy } = createBluetooth();
+  Chart.defaults.color = 'white';
 
-  let data = [];
+  let canvas;
 
-  onMount(async () => {
-    await setupBLE();
+  let labels = [];
+  let temps = [];
+
+  let data = {
+    labels,
+    datasets: [
+      {
+        label: 'Temperature',
+        data: temps,
+        tension: 0.1,
+        pointRadius: 4,
+      },
+    ],
+  };
+
+  const config = {
+    type: 'line',
+    data: data,
+    options: {
+      responsive: true,
+      title: {
+        display: true,
+        text: 'Temperature',
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Time',
+          },
+          grid: {
+            borderColor: 'white',
+            color: 'rgba(255, 255, 255, 0.3)',
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Temperature',
+          },
+          grid: {
+            borderColor: 'white',
+            color: 'rgba(255, 255, 255, 0.3)',
+          },
+        },
+      },
+    },
+  };
+
+  onMount(() => {
+    const ctx = canvas.getContext('2d');
+    const myChart = new Chart(ctx, config);
+
+    const interval = setInterval(() => {
+      const { x, y } = generateData();
+      labels.push(x);
+      temps.push(y);
+      myChart.update();
+    }, 3000);
+
+    return () => {
+      clearInterval(interval);
+    };
   });
 
-  async function setupBLE() {
-    // Get adapter
-    const adapter = await bluetooth.defaultAdapter();
-
-    // Start discovering
-    if (!(await adapter.isDiscovering())) {
-      await adapter.startDiscovery();
-    }
-
-    // Get a device, Connect and Get GATT server
-    const device = await adapter.waitDevice('uuid');
-    await device.connect();
-    const gattServer = await device.gatt();
-
-    // Subscribe to a characteristic
-    const service = await gattServer.getPrimaryService('uuid');
-    const characteristic = await service.getCharacteristic('uuid');
-    await characteristic.startNotifications();
-    characteristic.on('valuechanged', (buffer) => {
-      console.log(buffer);
-      data.push(buffer);
-    });
-  }
-
-  async function stop(device) {
-    await device.disconnect();
-    destroy();
+  function generateData() {
+    const time = new Date().toLocaleTimeString();
+    return { x: time, y: (Math.random() * 10).toFixed(2) };
   }
 </script>
 
 <main>
   <h1>Proximity analyzer</h1>
+  <canvas bind:this={canvas} width="800" height="600" />
 </main>
 
 <style>
