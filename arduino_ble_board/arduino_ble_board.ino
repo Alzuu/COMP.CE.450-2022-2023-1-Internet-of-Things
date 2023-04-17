@@ -17,6 +17,10 @@ const char* proximityServiceUID = "7c8d0422-c197-11ed-afa1-0242ac120002";
 const char* proximityCharUID = "f4e832ac-c197-11ed-afa1-0242ac120002";
 const char* weatherServiceUID = "12dfaa88-c198-11ed-afa1-0242ac120002";
 const char* temperatureCharUID = "26dd8136-c198-11ed-afa1-0242ac120002";
+const int pinBillboard0 = 13;
+const int pinBillboard1 = 14;
+int billboardState = 0;
+
 
 // Instanciate the offered services
 BLEService proximityService(proximityServiceUID);
@@ -44,6 +48,9 @@ void setup() {
   weatherService.addCharacteristic(temperatureCharacteristic);
   BLE.addService(weatherService);
   BLE.advertise();
+
+  // billboard control
+  billboardState = startOutputLed(pinBillboard0, pinBillboard1);
 }
 
 void loop() {  
@@ -110,4 +117,28 @@ void startProximitySensor() {
   }
 }
 
+void startOutputLed(int pin0, int pin1) {
+  pinMode(pin0, OUTPUT);
+  pinMode(pin1, OUTPUT);
+  // Initial state: Billboard 0
+  digitalWrite(pin0, LOW);
+  digitalWrite(pin1, HIGH);
+  return 0;
+}
 
+void toggleLED() {
+  int newBillboardState = 0;
+  if (billboardState == 0) {
+    // change to billboard 1
+    digitalWrite(pin0, HIGH);
+    digitalWrite(pin1, LOW);
+    newBillboardState = 1;
+  } else {
+    // change to billboard 0
+    digitalWrite(pin0, LOW);
+    digitalWrite(pin1, HIGH);
+    newBillboardState = 0;
+  }
+  return newBillboardState; 
+  
+}
