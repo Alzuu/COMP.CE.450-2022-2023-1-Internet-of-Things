@@ -24,9 +24,9 @@ int billboardState = 0;
 
 // Instanciate the offered services
 BLEService proximityService(proximityServiceUID);
-BLEBooleanCharacteristic proximityCharacteristic(proximityCharUID, BLERead | BLENotify);
+BLEBooleanCharacteristic proximityCharacteristic(proximityCharUID, BLERead | BLENotify | BLEIndicate);
 BLEService weatherService(weatherServiceUID);
-BLEFloatCharacteristic temperatureCharacteristic(temperatureCharUID, BLERead | BLENotify);
+BLEFloatCharacteristic temperatureCharacteristic(temperatureCharUID, BLERead | BLENotify | BLEIndicate);
 
 void setup() {
   // Open serial port for debugging
@@ -56,22 +56,15 @@ void setup() {
 void loop() {  
   BLEDevice central = BLE.central();
 
-  if (central) {
-    Serial.println("Connected to central device!");
-
-    // While at least one device is reading from the characteristics
-    while (central.connected()) {
-      float temperature = HTS.readTemperature();
-      writeTemperature(temperature);
-
-      if (APDS.proximityAvailable()) {
-        int proximity = APDS.readProximity();
-        writeProximity(proximity);
-      }
-      
-      delay(1000);
-    }
+  // Only write the sensor values if the proximity sensor has a value available, since the temperature sensor is always available
+  if (APDS.proximityAvailable()) {
+    float temperature = HTS.readTemperature();
+    writeTemperature(temperature);
+    int proximity = APDS.readProximity();
+    writeProximity(proximity);
   }
+
+  delay(1000);
 }
 
 void writeTemperature(float temperature) {
