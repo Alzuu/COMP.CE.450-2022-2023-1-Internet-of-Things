@@ -21,7 +21,7 @@
     labels,
     datasets: [
       {
-        label: 'Temperature',
+        label: 'Temperature (°C)',
         data: temps,
         tension: 0.1,
         pointRadius: 4,
@@ -54,13 +54,16 @@
         y: {
           title: {
             display: true,
-            text: 'Temperature',
+            text: 'Temperature (°C)',
           },
           grid: {
             borderColor: 'white',
             color: 'rgba(255, 255, 255, 0.3)',
           },
         },
+      },
+      animation: {
+        duration: 500,
       },
     },
   };
@@ -79,4 +82,6 @@
   });
 </script>
 
-<canvas bind:this={canvas} width="800" height="600" />
+<div class="temperature">
+  <canvas bind:this={canvas} />
+</div>
