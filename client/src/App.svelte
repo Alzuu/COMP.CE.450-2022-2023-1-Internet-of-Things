@@ -3,6 +3,7 @@
   import { writable } from 'svelte/store';
   import { time, temperature, proximity } from './stores';
   import Temperature from './lib/Temperature.svelte';
+  import Proximity from './lib/Proximity.svelte';
 
   onMount(() => {
     const proximityEvtSource = new EventSource(
@@ -14,13 +15,18 @@
 
     proximityEvtSource.onmessage = (event) => {
       // console.log(event);
+      const newTime = generateTime();
+      time.set(newTime);
+
+      let data;
+      if (event.data) {
+        data = event.data;
+      }
+      proximity.set(data);
     };
 
     temperatureEvtSource.onmessage = (event) => {
       // console.log(event);
-      const newTime = generateTime();
-      time.set(newTime);
-
       let data;
       if (event.data) {
         data = Number.parseFloat(event.data);
@@ -36,9 +42,17 @@
 </script>
 
 <main>
-  <h1>Proximity analyzer</h1>
-  <Temperature />
+  <h1>Temperature-Proximity Analyzer</h1>
+  <section class="container">
+    <Temperature />
+    <Proximity />
+  </section>
 </main>
 
 <style>
+  .container {
+    display: grid;
+    grid-auto-rows: minmax(0, 1fr);
+    grid-auto-flow: row;
+  }
 </style>
