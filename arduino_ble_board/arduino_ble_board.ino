@@ -17,9 +17,17 @@ const char* proximityServiceUID = "7c8d0422-c197-11ed-afa1-0242ac120002";
 const char* proximityCharUID = "f4e832ac-c197-11ed-afa1-0242ac120002";
 const char* weatherServiceUID = "12dfaa88-c198-11ed-afa1-0242ac120002";
 const char* temperatureCharUID = "26dd8136-c198-11ed-afa1-0242ac120002";
-const int pinBillboard0 = 13;
-const int pinBillboard1 = 14;
-int billboardState = 0;
+const int pinBillboard0 = 11;
+const int pinBillboard1 = 10;
+unsigned int billboardState = 0;
+unsigned int led0state =0;
+unsigned int led1state =0;
+long previousMillis = 0;
+long stayingMillis = 0;
+
+const long intervalChange = 10000;
+const long intervalHold = 5000;
+
 
 
 // Instanciate the offered services
@@ -50,20 +58,38 @@ void setup() {
   BLE.advertise();
 
   // billboard control
-  billboardState = startOutputLed(pinBillboard0, pinBillboard1);
+  startOutputLed(pinBillboard0, pinBillboard1);
 }
 
 void loop() {  
   BLEDevice central = BLE.central();
-
+  int proximity =0 ;
   // Only write the sensor values if the proximity sensor has a value available, since the temperature sensor is always available
   if (APDS.proximityAvailable()) {
     float temperature = HTS.readTemperature();
     writeTemperature(temperature);
-    int proximity = APDS.readProximity();
+    proximity = APDS.readProximity();
     writeProximity(proximity);
   }
-
+  // billboard timer
+  
+  // 1. Check if there is someone looking at the board. If yes, stop the timer.
+  if (proximity > 200) {
+    previousMillis = previousMillis + 1000;
+    stayingMillis = 0;
+    resetLed();
+  } else {
+    stayingMillis = stayingMillis + 1000;
+  }
+  if (previousMillis > intervalChange){
+    billboardState = toggleLED(billboardState, pinBillboard0, pinBillboard1);
+    previousMillis = 0;
+  }
+  if (stayingMillis > intervalHold) {
+    blinkLED(billboardState, pinBillboard0, pinBillboard1);
+  }
+  Serial.print("LED = ");
+  Serial.println(billboardState);
   delay(1000);
 }
 
@@ -114,24 +140,71 @@ void startOutputLed(int pin0, int pin1) {
   pinMode(pin0, OUTPUT);
   pinMode(pin1, OUTPUT);
   // Initial state: Billboard 0
-  digitalWrite(pin0, LOW);
-  digitalWrite(pin1, HIGH);
-  return 0;
+  digitalWrite(pin0, HIGH);
+  digitalWrite(pin1, LOW);
+  billboardState = 0;
+  led0state = 1;
+  led1state = 0;
+  
 }
 
-void toggleLED() {
+int toggleLED(int billboardState, int pin0, int pin1) {
   int newBillboardState = 0;
   if (billboardState == 0) {
     // change to billboard 1
-    digitalWrite(pin0, HIGH);
-    digitalWrite(pin1, LOW);
+    digitalWrite(pin0, LOW);
+    digitalWrite(pin1, HIGH);
+    led0state = 0;
+    led1state = 1;
     newBillboardState = 1;
   } else {
     // change to billboard 0
-    digitalWrite(pin0, LOW);
-    digitalWrite(pin1, HIGH);
+    digitalWrite(pin0, HIGH);
+    digitalWrite(pin1, LOW);
     newBillboardState = 0;
+    led0state = 1;
+    led1state = 0;
   }
-  return newBillboardState; 
-  
+  return newBillboardState;
 }
+
+void blinkLED(int billboardState, int pin0, int pin1) {
+  if (billboardState == 0) {
+    if (led0state == 0){
+      digitalWrite(pin0, HIGH);
+      digitalWrite(pin1, LOW);
+      led0state = 1;
+    } else {
+      digitalWrite(pin0, LOW);
+      digitalWrite(pin1, LOW);
+      led0state = 0;
+    }
+
+  } else {
+    if (led1state == 0){
+
+      digitalWrite(pin0, LOW);
+      digitalWrite(pin1, HIGH);
+      led1state = 1;
+    } else {
+      digitalWrite(pin0, LOW);
+      digitalWrite(pin1, LOW);
+      led1state = 0;
+    }
+  }
+  Serial.println("HOLDING MODE: ON");
+}
+
+void resetLed() {
+  if (billboardState == 0){
+    digitalWrite(pinBillboard0, HIGH);
+    digitalWrite(pinBillboard1, LOW);
+    led0state = 1;
+  } else {
+    digitalWrite(pinBillboard0, LOW);
+    digitalWrite(pinBillboard1, HIGH);
+    led1state = 1;
+  }
+  Serial.println("HOLDING MODE: OFF");
+}
+
