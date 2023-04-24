@@ -1,9 +1,47 @@
+const express = require('express');
+const cors = require('cors');
 const noble = require('@abandonware/noble');
+
+const app = express();
+const port = 3000;
+
+app.use(cors());
+
+const headers = {
+  'Content-Type': 'text/event-stream',
+  Connection: 'keep-alive',
+  'Cache-Control': 'no-cache',
+};
+
+app.get('/', (req, res) => res.send('hello!'));
+
+app.get('/proximity', (req, res) => {
+  res.writeHead(200, headers);
+
+  const interval = setInterval(() => {
+    sendProximity(res);
+  }, 1000);
+});
+
+app.get('/temperature', (req, res) => {
+  res.writeHead(200, headers);
+
+  const interval = setInterval(() => {
+    sendTemperature(res);
+  }, 1000);
+});
+
+app.listen(port, () => {
+  console.log('SSE listening on port 3000!');
+});
 
 proximityServiceUID = '7c8d0422c19711edafa10242ac120002';
 proximityCharacteristicUID = 'f4e832acc19711edafa10242ac120002';
 weatherServiceUID = '12dfaa88c19811edafa10242ac120002';
 temperatureCharacteristicUID = '26dd8136c19811edafa10242ac120002';
+
+let proximity;
+let temperature;
 
 noble.on('stateChange', (state) => {
   if (state === 'poweredOn') {
@@ -63,15 +101,6 @@ function onServicesAndCharacteristicsDiscovered(
   const proximityCharacteristic = characteristics[0];
   const temperatureCharacteristic = characteristics[1];
 
-  // data callback receives notifications
-  proximityCharacteristic.on('data', (data, isNotification) => {
-    console.log(`Proximity characteristic data: "${parseProximity(data)}"`);
-  });
-
-  temperatureCharacteristic.on('data', (data, isNotification) => {
-    console.log(`Temperature characteristic data: "${parseTemperature(data)}"`);
-  });
-
   // subscribe to be notified whenever the peripheral updates the characteristics
   proximityCharacteristic.subscribe((error) => {
     if (error) {
@@ -87,6 +116,17 @@ function onServicesAndCharacteristicsDiscovered(
     } else {
       console.log('Subscribed for proximityCharacteristic notifications');
     }
+  });
+
+  // data callback receives notifications
+  proximityCharacteristic.on('data', (data, isNotification) => {
+    console.log(`Proximity characteristic data: "${parseProximity(data)}"`);
+    proximity = parseProximity(data);
+  });
+
+  temperatureCharacteristic.on('data', (data, isNotification) => {
+    console.log(`Temperature characteristic data: "${parseTemperature(data)}"`);
+    temperature = parseTemperature(data);
   });
 }
 
@@ -111,4 +151,12 @@ function parseProximity(data) {
 
 function parseTemperature(data) {
   return Buffer.from(data).readFloatLE(0).toFixed(2);
+}
+
+function sendProximity(res) {
+  res.write(`data: ${String(proximity)}\n\n`);
+}
+
+function sendTemperature(res) {
+  res.write(`data: ${String(temperature)}\n\n`);
 }
