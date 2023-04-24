@@ -1,20 +1,27 @@
 <script>
   import { onMount } from 'svelte';
-  import { writable } from 'svelte/store';
   import { time, temperature, proximity } from './stores';
   import Temperature from './lib/Temperature.svelte';
   import Proximity from './lib/Proximity.svelte';
 
-  onMount(() => {
-    const proximityEvtSource = new EventSource(
-      'http://localhost:3000/proximity'
-    );
-    const temperatureEvtSource = new EventSource(
-      'http://localhost:3000/temperature'
-    );
+  let connection = false;
+  let temperatureEvtSource;
+  let proximityEvtSource;
 
+  onMount(() => {
+    connect();
+  });
+
+  function generateTime() {
+    const time = new Date().toLocaleTimeString('fi-fi');
+    return time;
+  }
+
+  function connect() {
+    connection = true;
+    proximityEvtSource = new EventSource('http://localhost:3000/proximity');
+    temperatureEvtSource = new EventSource('http://localhost:3000/temperature');
     proximityEvtSource.onmessage = (event) => {
-      // console.log(event);
       const newTime = generateTime();
       time.set(newTime);
 
@@ -26,27 +33,33 @@
     };
 
     temperatureEvtSource.onmessage = (event) => {
-      // console.log(event);
       let data;
       if (event.data) {
         data = Number.parseFloat(event.data);
       }
       temperature.set(data);
     };
-  });
+  }
 
-  function generateTime() {
-    const time = new Date().toLocaleTimeString('fi-fi');
-    return time;
+  function pause() {
+    connection = false;
+    proximityEvtSource.close();
+    temperatureEvtSource.close();
   }
 </script>
 
 <main>
-  <h1>Temperature-Proximity Analyzer</h1>
+  <h1>Smart Billboard Application</h1>
+  <h2>Temperature-Proximity Analyzer</h2>
   <section class="container">
     <Temperature />
     <Proximity />
   </section>
+  {#if connection}
+    <button on:click={pause}>Pause</button>
+  {:else}
+    <button on:click={connect}>Connect</button>
+  {/if}
 </main>
 
 <style>
