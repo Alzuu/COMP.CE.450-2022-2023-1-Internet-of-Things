@@ -10,6 +10,10 @@
 
   onMount(() => {
     connect();
+
+    return () => {
+      disconnect();
+    };
   });
 
   function generateTime() {
@@ -41,7 +45,7 @@
     };
   }
 
-  function pause() {
+  function disconnect() {
     connection = false;
     proximityEvtSource.close();
     temperatureEvtSource.close();
@@ -56,9 +60,9 @@
     <Proximity />
   </section>
   {#if connection}
-    <button on:click={pause}>Pause</button>
+    <button class="button" on:click={disconnect}>Pause</button>
   {:else}
-    <button on:click={connect}>Connect</button>
+    <button class="button" on:click={connect}>Connect</button>
   {/if}
 </main>
 
@@ -67,5 +71,29 @@
     display: grid;
     grid-auto-rows: minmax(0, 1fr);
     grid-auto-flow: row;
+  }
+
+  .button {
+    background-color: white;
+    border-radius: 8px;
+    border-width: 0;
+    color: #333333;
+    cursor: pointer;
+    display: inline-block;
+    font-family: 'Haas Grot Text R Web', 'Helvetica Neue', Helvetica, Arial,
+      sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    list-style: none;
+    margin: 1rem;
+    padding: 10px 12px;
+    text-align: center;
+    transition: all 200ms;
+    vertical-align: baseline;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
   }
 </style>
